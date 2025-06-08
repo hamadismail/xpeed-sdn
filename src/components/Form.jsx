@@ -51,7 +51,7 @@ const Form = () => {
       onSubmit={handleFormSubmit}
       className="max-w-4xl mx-auto p-6 space-y-6"
     >
-      <h2 className="text-2xl font-bold text-center">Generate Receipt</h2>
+      <h2 className="text-2xl font-bold text-center">Xpeed Group</h2>
 
       <div>
         <label className="block mb-1 font-medium">Hotel</label>
