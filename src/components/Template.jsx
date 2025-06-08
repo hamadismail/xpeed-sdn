@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useNavigate } from "react-router";
 import { MdEmail, MdPhone, MdLocationOn } from "react-icons/md";
 import jsPDF from "jspdf";
@@ -11,10 +11,13 @@ const Template = () => {
   const navigate = useNavigate();
   const receiptRef = useRef();
 
-  if (!formData) {
-    navigate("/");
-    return null;
-  }
+  useEffect(() => {
+    if (!formData) {
+      navigate("/");
+    }
+  }, [formData, navigate]);
+
+  if (!formData) return null;
 
   const formatMonth = (monthStr) => {
     const date = new Date(`${monthStr}-01`);
@@ -40,7 +43,7 @@ const Template = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-4xl mx-auto px-4 py-8">
       <Toaster />
       <div ref={receiptRef} className="bg-white p-6 rounded shadow-md">
         <div className="flex justify-between items-center border-b pb-4 mb-4">
