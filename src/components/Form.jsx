@@ -1,63 +1,114 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
+import { useFormData } from "../providers/FormProvider";
 
-const Form = ({ onSubmit }) => {
-  const [month, setMonth] = useState("");
-  const [entries, setEntries] = useState([
-    { date: "", description: "", amount: "" },
-  ]);
+const hotels = ["ORKID HILLS", "ECO HOTEL"];
+
+const Form = () => {
+  const { setFormData } = useFormData();
+  const navigate = useNavigate();
+
+  const [formState, setFormState] = useState({
+    hotel: "",
+    type: "Expenditure",
+    month: "",
+    entries: [{ date: "", description: "", payTo: "", amount: "" }],
+  });
 
   const handleChange = (index, field, value) => {
-    const updated = [...entries];
-    updated[index][field] = value;
-    setEntries(updated);
+    const updatedEntries = [...formState.entries];
+    updatedEntries[index][field] = value;
+    setFormState({ ...formState, entries: updatedEntries });
   };
 
   const addEntry = () => {
-    setEntries([...entries, { date: "", description: "", amount: "" }]);
+    setFormState({
+      ...formState,
+      entries: [
+        ...formState.entries,
+        { date: "", description: "", payTo: "", amount: "" },
+      ],
+    });
   };
 
   const removeEntry = (index) => {
-    const updated = entries.filter((_, i) => i !== index);
-    setEntries(updated);
+    const updated = formState.entries.filter((_, i) => i !== index);
+    setFormState({ ...formState, entries: updated });
   };
 
-  const handleSubmit = (e) => {
+  const handleFormSubmit = (e) => {
     e.preventDefault();
-    const parsedEntries = entries.map((entry) => ({
+    const cleaned = formState.entries.map((entry) => ({
       ...entry,
       amount: parseFloat(entry.amount),
     }));
-    onSubmit({ month, entries: parsedEntries });
+    setFormData({ ...formState, entries: cleaned });
+    navigate("/template");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-3xl mx-auto px-4 py-6">
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-1" htmlFor="month">
-          Month
-        </label>
+    <form
+      onSubmit={handleFormSubmit}
+      className="max-w-4xl mx-auto p-6 space-y-6"
+    >
+      <h2 className="text-2xl font-bold text-center">Generate Receipt</h2>
+
+      <div>
+        <label className="block mb-1 font-medium">Hotel</label>
+        <select
+          required
+          value={formState.hotel}
+          onChange={(e) =>
+            setFormState({ ...formState, hotel: e.target.value })
+          }
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="">Select Hotel</option>
+          {hotels.map((hotel) => (
+            <option key={hotel} value={hotel}>
+              {hotel}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-1 font-medium">Type</label>
+        <select
+          value={formState.type}
+          onChange={(e) => setFormState({ ...formState, type: e.target.value })}
+          className="w-full border rounded px-3 py-2"
+          required
+        >
+          <option value="Expenditure">Expenditure</option>
+          <option value="Income">Income</option>
+        </select>
+      </div>
+
+      <div>
+        <label className="block mb-1 font-medium">Month</label>
         <input
-          type="text"
-          id="month"
-          value={month}
-          onChange={(e) => setMonth(e.target.value)}
-          className="w-full border border-gray-300 rounded px-3 py-2"
-          placeholder="e.g. June 2025"
+          type="month"
+          value={formState.month}
+          onChange={(e) =>
+            setFormState({ ...formState, month: e.target.value })
+          }
+          className="w-full border rounded px-3 py-2"
           required
         />
       </div>
 
-      {entries.map((entry, index) => (
+      {formState.entries.map((entry, index) => (
         <div
           key={index}
-          className="mb-4 border p-4 rounded bg-gray-50 space-y-2 relative"
+          className="border p-4 rounded space-y-2 relative bg-gray-50"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input
               type="date"
               value={entry.date}
               onChange={(e) => handleChange(index, "date", e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2"
               required
             />
             <input
@@ -67,24 +118,31 @@ const Form = ({ onSubmit }) => {
               onChange={(e) =>
                 handleChange(index, "description", e.target.value)
               }
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2"
+              required
+            />
+            <input
+              type="text"
+              placeholder="Pay To"
+              value={entry.payTo}
+              onChange={(e) => handleChange(index, "payTo", e.target.value)}
+              className="w-full border rounded px-3 py-2"
               required
             />
             <input
               type="number"
-              placeholder="Amount (RM)"
+              placeholder="Amount"
               value={entry.amount}
               onChange={(e) => handleChange(index, "amount", e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2"
+              className="w-full border rounded px-3 py-2"
               required
             />
           </div>
-          {entries.length > 1 && (
+          {formState.entries.length > 1 && (
             <button
               type="button"
               onClick={() => removeEntry(index)}
-              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-              title="Remove entry"
+              className="absolute top-2 right-2 text-red-500"
             >
               &times;
             </button>
@@ -92,22 +150,20 @@ const Form = ({ onSubmit }) => {
         </div>
       ))}
 
-      <div className="mb-4">
-        <button
-          type="button"
-          onClick={addEntry}
-          className="text-blue-600 hover:text-blue-800 text-sm"
-        >
-          + Add another entry
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={addEntry}
+        className="text-blue-600 hover:underline text-sm"
+      >
+        + Add another entry
+      </button>
 
-      <div className="text-center">
+      <div>
         <button
           type="submit"
-          className="bg-green-600 text-white px-6 py-2 rounded shadow hover:bg-green-700 transition"
+          className="bg-green-600 cursor-pointer text-white px-6 py-2 rounded hover:bg-green-700"
         >
-          Submit
+          Generate Receipt
         </button>
       </div>
     </form>
